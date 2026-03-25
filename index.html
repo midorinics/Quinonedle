@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quinone-dle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0915;
+            --card: #1c1a2b;
+            --correct: #27ae60;
+            --partial: #d35400;
+            --wrong: #7f1d1d;
+            --gold: #d4af37;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at center, #1a1635 0%, #0b0915 100%);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 4rem;
+            color: var(--gold);
+            margin: 40px 0 10px 0;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .subtitle {
+            font-style: italic;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+
+        .counter-text {
+            font-weight: bold;
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .main-banner {
+            max-width: 400px;
+            width: 80%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); 
+            display: block;
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 40px;
+            z-index: 100;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: 2px solid #444;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            font-size: 1.2rem;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        #suggestions {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1c1a2b;
+            border-radius: 15px;
+            margin-top: 10px;
+            padding: 0;
+            list-style: none;
+            border: 1px solid #444;
+            display: none;
+        }
+
+        #suggestions li {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            transition: 0.2s;
+        }
+
+        #suggestions li:hover { background: var(--gold); color: black; }
+
+        #suggestions li img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+
+        .table-container {
+            width: 95%;
+            overflow-x: auto;
+            margin-bottom: 50px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 1000px;
+            border-collapse: separate;
+            border-spacing: 8px;
+        }
+
+        th {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            padding: 10px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        td {
+            background: var(--card);
+            padding: 15px 5px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 700;
+            height: 80px;
+            vertical-align: middle;
+            animation: flipIn 0.6s ease forwards;
+        }
+
+        @keyframes flipIn {
+            from { transform: rotateX(-90deg); opacity: 0; }
+            to { transform: rotateX(0deg); opacity: 1; }
+        }
+
+        .portrait-img {
+            width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid #444;
+        }
+
+        .correct { background-color: var(--correct) !important; }
+        .partial { background-color: var(--partial) !important; }
+        .wrong { background-color: var(--wrong) !important; }
+
+        .victory-container { display: none; flex-direction: column; align-items: center; margin-bottom: 20px; }
+        .victory-banner { background: var(--gold); color: black; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 1.5rem; box-shadow: 0 0 20px var(--gold); margin-bottom: 15px; }
+        .btn-reset { background: white; color: black; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-reset:hover { background: var(--gold); transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <h1>Quinone-dle</h1>
+    
+    <img src="banner.png" class="main-banner" onerror="this.style.display='none'">
+
+    <p class="subtitle">Guess the QATLS character!</p>
+    <div id="guess-counter" class="counter-text">Guesses: 0</div>
+    
+    <div id="victory-container" class="victory-container">
+        <div id="victory" class="victory-banner">🏆 CRITICAL SUCCESS!</div>
+        <button class="btn-reset" onclick="resetGame()">PLAY AGAIN</button>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="guess-input" placeholder="Type a character name..." autocomplete="off">
+        <ul id="suggestions"></ul>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Character</th>
+                    <th>Gender</th>
+                    <th>Race</th>
+                    <th>Class</th>
+                    <th>Origin</th>
+                    <th>Alignment</th>
+                    <th>Season</th>
+                    <th>Twilight</th>
+                </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const party = [
+            { name: "Multi Thornblade", image: "multi.png", gender: "Male", race: "High Elf", class: "Paladin", origin: "Sylvanthal", align: "Neutral", season: "Season 1", twilight: "Twilight of Flesh & Will" },
+            { name: "Davis Ignivar", image: "davis.png", gender: "Male", race: "Dragon", class: "Sorcerer", origin: "Grinches", align: "Lawful Evil", season: "Season 2", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Timi Sangonomiya", image: "timi.png", gender: "Female", race: "Aasimar", class: "Wizard", origin: "Sierra City", align: "Lawful Good", season: "Season 1", twilight: "Twilight of Will" },
+            { name: "Lilith Moonshadow", image: "lilith.png", gender: "Female", race: "Tiefling", class: "Warlock", origin: "Moonshadow Estate", align: "Good", season: "Season 1", twilight: "Twilight of Mind" },
+            { name: "Vesper Roderick", image: "vesper.png", gender: "Male", race: "Human", class: "Monk", origin: "Harmony's End", align: "Lawful Evil", season: "Season 1", twilight: "Twilight of Flesh" },
+            { name: "Issaby Meant", image: "issaby.png", gender: "Female", race: "Human", class: "Bard", origin: "Mezzon", align: "Neutral Good", season: "Season 1", twilight: "None" },
+            { name: "Ols of Dolvest", image: "ols.png", gender: "Male", race: "Grafted Being", class: "Ranger", origin: "Dolvest", align: "Chaotic Good", season: "Season 1", twilight: "Twilight of Will" },
+            { name: "Kevin Komaad", image: "kevin.png", gender: "Male", race: "Human", class: "Fighter", origin: "Dolvest", align: "Neutral", season: "Season 1", twilight: "Twilight of Will" },
+            { name: "Ramses", image: "ramses.png", gender: "Female", race: "Human", class: "Fighter", origin: "Sierra City", align: "Lawful Neutral", season: "Season 1", twilight: "Twilight of Will" },
+            { name: "Olimp", image: "olimp.png", gender: "Male", race: "Android", class: "Fighter", origin: "Ironpeak Academy", align: "Lawful Neutral", season: "Season 3", twilight: "No Twilight" },
+            { name: "Stella", image: "stella.png", gender: "Female", race: "Human", class: "Barbarian", origin: "Aboskye Village", align: "Chaotic Neutral", season: "Season 3", twilight: "No Twilight" },
+            { name: "???", image: "unknown.png", gender: "Male", race: "Human", class: "Echo Knight", origin: "Nokr-Stadt", align: "Chaotic Good", season: "Season 1", twilight: "Twilight of Flesh" },
+            { name: "Johrey Garrick", image: "johrey.png", gender: "Male", race: "Human", class: "Swordsman", origin: "The World", align: "Lawful Good", season: "Season 1", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Noah Moonshadow", image: "noah.png", gender: "Male", race: "Human", class: "No Class", origin: "Sierra City", align: "Neutral Good", season: "Season 2", twilight: "No Twilight" },
+            { name: "Aiko Ignivar", image: "aiko.png", gender: "Female", race: "Kitsune", class: "Sorcerer", origin: "Dark World", align: "Chaotic Good", season: "Season 3", twilight: "No Twilight" },
+            { name: "Albania", image: "albania.png", gender: "Male", race: "Human", class: "No Class", origin: "Atlantis", align: "Neutral Evil", season: "Season 3", twilight: "No Twilight" },
+            { name: "Mortimer", image: "mortimer.png", gender: "Male", race: "Human", class: "Cleric", origin: "Mezzon", align: "Neutral Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Frost Hydra", image: "frosthydra.png", gender: "Male", race: "Dragon", class: "No Class", origin: "The World", align: "Chaotic Evil", season: "Season 1", twilight: "Twilight of Flesh" },
+            { name: "Cedric Stormborne", image: "cedric.png", gender: "Male", race: "Human", class: "Fighter", origin: "Avaloria", align: "Lawful Good", season: "Season 1", twilight: "Twilight of Will" },
+            { name: "Quinone Brinnit", image: "quinone.png", gender: "Male", race: "Human", class: "Sorcerer", origin: "The World", align: "Lawful Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Kendi Meant", image: "kendi.png", gender: "Male", race: "Human", class: "Bard", origin: "Mezzon", align: "Neutral", season: "Season 1", twilight: "No Twilight" },
+            { name: "Jeeb", image: "jeeb.png", gender: "Male", race: "Undead", class: "Fighter", origin: "The World", align: "Neutral Evil", season: "Season 1", twilight: "Twilight of Will" },
+            { name: "Asmodeus", image: "asmodeus.png", gender: "Male", race: "Demon", class: "No Class", origin: "Circle of Lust", align: "Chaotic Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Belphegor", image: "belphegor.png", gender: "Male", race: "Demon", class: "No Class", origin: "Circle of Sloth", align: "Neutral", season: "Season 1", twilight: "No Twilight" },
+            { name: "Baal", image: "baal.png", gender: "Male", race: "Demon", class: "No Class", origin: "Circle of Gluttony", align: "Chaotic Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Moloch", image: "moloch.png", gender: "Female", race: "Demon", class: "No Class", origin: "Circle of Wrath", align: "Chaotic Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Leviathan", image: "leviathan.png", gender: "Male", race: "Demon", class: "No Class", origin: "Circle of Envy", align: "Lawful Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Mammon", image: "mammon.png", gender: "Male", race: "Demon", class: "No Class", origin: "Circle of Greed", align: "Chaotic Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Lucifer", image: "lucifer.png", gender: "Male", race: "Angel", class: "No Class", origin: "Circle of Pride", align: "Lawful Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Amon", image: "amon.png", gender: "Male", race: "Demon", class: "No Class", origin: "Circle of Envy", align: "Chaotic Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Grimrath, The Devourer", image: "grimrath.png", gender: "Male", race: "God", class: "No Class", origin: "The World", align: "Chaotic Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Meadow", image: "meadow.png", gender: "Female", race: "Human", class: "Sorcerer", origin: "The World", align: "Lawful Evil", season: "Season 1", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Knudow", image: "knudow.png", gender: "Male", race: "Dragon", class: "Sorcerer", origin: "The World", align: "Chaotic Evil", season: "Season 2", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Morwen", image: "morwen.png", gender: "Male", race: "Human", class: "Sorcerer", origin: "The World", align: "Neutral Evil", season: "Season 2", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Thalgar", image: "thalgar.png", gender: "Male", race: "Human", class: "Sorcerer", origin: "The World", align: "Lawful Good", season: "Season 1", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Astraith Moonshadow", image: "astraith.png", gender: "Female", race: "Human", class: "Sorcerer", origin: "Moonshadow Estate", align: "Neutral", season: "Season 2", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Silvyus Rennard", image: "silvyus.png", gender: "Male", race: "High Elf", class: "Sorcerer", origin: "Sylvanthal", align: "Chaotic Evil", season: "Season 1", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Bartholomew Diaz", image: "bartholomew.png", gender: "Male", race: "Human", class: "Barbarian", origin: "Dolvest", align: "Lawful Good", season: "Season 2", twilight: "Twilight of Flesh & Will" },
+            { name: "Jeofry The Wolf", image: "jeofry.png", gender: "Male", race: "Human", class: "Fighter", origin: "Dolvest", align: "Chaotic Neutral", season: "Season 2", twilight: "No Twilight" },
+            { name: "Pangasius The Snake", image: "pangasius.png", gender: "Male", race: "Human", class: "Warlock", origin: "Dolvest", align: "Neutral Good", season: "Season 2", twilight: "No Twilight" },
+            { name: "Kornelia The Eagle", image: "kornelia.png", gender: "Female", race: "Human", class: "Ranger", origin: "Dolvest", align: "Neutral Good", season: "Season 2", twilight: "Twilight of Mind" },
+            { name: "Yulius Kamado", image: "yulius.png", gender: "Male", race: "Human", class: "Fighter", origin: "Dolvest", align: "Neutral Good", season: "Season 2", twilight: "No Twilight" },
+            { name: "Ishara The Wind Dancer", image: "ishara.png", gender: "Female", race: "Human", class: "Fighter", origin: "The World", align: "Neutral Good", season: "Season 2", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Cico The Boss", image: "cico.png", gender: "Male", race: "Human", class: "Ranger", origin: "The World", align: "Chaotic Neutral", season: "Season 2", twilight: "No Twilight" },
+            { name: "Goldrush", image: "goldrush.png", gender: "Male", race: "Demon", class: "No Class", origin: "Circle of Greed", align: "Chaotic Evil", season: "Season 1", twilight: "No Twilight" },
+            { name: "Kalifa Il Abnallah", image: "kalifa.png", gender: "Male", race: "Human", class: "Warlock", origin: "Burtistic Empire", align: "Chaotic Evil", season: "Season 3", twilight: "No Twilight" },
+            { name: "Lirien Frostwillow", image: "lirien.png", gender: "Female", race: "Human", class: "Artificer", origin: "Burtistic Empire", align: "Lawful Neutral", season: "Season 3", twilight: "No Twilight" },
+            { name: "Korrak Ironshade", image: "korrak.png", gender: "Male", race: "Human", class: "Barbarian", origin: "Burtistic Empire", align: "Chaotic Neutral", season: "Season 3", twilight: "No Twilight" },
+            { name: "Selithra Alvein", image: "selithra.png", gender: "Female", race: "Human", class: "Sorcerer", origin: "Burtistic Empire", align: "Lawful Neutral", season: "Season 3", twilight: "Twilight of Will" },
+            { name: "Eryndor Vayne", image: "eryndor.png", gender: "Male", race: "Human", class: "Fighter", origin: "Burtistic Empire", align: "Neutral Good", season: "Season 3", twilight: "Twilight of Will" },
+            { name: "Rancor The Starborn", image: "rancor.png", gender: "Male", race: "God", class: "Paladin", origin: "The World", align: "Lawful Good", season: "Season 3", twilight: "No Twilight" },
+            { name: "Nyxara Veil", image: "nyxara.png", gender: "Female", race: "Human", class: "Cleric", origin: "Burtistic Empire", align: "Neutral Good", season: "Season 3", twilight: "No Twilight" },
+            { name: "George Cock", image: "george.png", gender: "Male", race: "Human", class: "Barbarian", origin: "Stepa Volgariana", align: "Chaotic Evil", season: "Season 3", twilight: "Twilight of Flesh & Mind & Will" },
+            { name: "Blondie", image: "blondie.png", gender: "Male", race: "Human", class: "Unknown Class", origin: "Sierra City", align: "Neutral Evil", season: "Season 3", twilight: "Unknown Twilight" },
+            { name: "Ivee Stormborne", image: "ivee.png", gender: "Female", race: "Grafted Being", class: "Warlock", origin: "Avaloria", align: "Chaotic Evil", season: "Season 3", twilight: "Unknown Twilight" },
+            { name: "Varyll", image: "varyll.png", gender: "Male", race: "Human", class: "Fighter", origin: "Dolvest", align: "Neutral Good", season: "Season 3", twilight: "Twilight of Will" },
+            { name: "Ols of Dolnest", image: "ols_dolnest.png", gender: "Male", race: "Human", class: "Artificer", origin: "Dolnest", align: "Lawful Evil", season: "Season 3", twilight: "No Twilight" },
+            { name: "Aeltheria", image: "aeltheria.png", gender: "Male", race: "God", class: "No Class", origin: "The World", align: "Lawful Good", season: "Season 1", twilight: "No Twilight" },
+            { name: "The Left Hand", image: "lefthand.png", gender: "Male", race: "Angel", class: "No Class", origin: "The World", align: "Lawful Good", season: "Season 1", twilight: "No Twilight" },
+            { name: "The Right Hand", image: "righthand.png", gender: "Female", race: "Angel", class: "No Class", origin: "The World", align: "Lawful Good", season: "Season 2", twilight: "No Twilight" },
+            { name: "The King in Yellow", image: "kingyellow.png", gender: "Male", race: "God", class: "No Class", origin: "The World", align: "Chaotic Neutral", season: "Season 3", twilight: "No Twilight" },
+            { name: "Mahabalipuram", image: "mahabalipuram.png", gender: "Male", race: "God", class: "No Class", origin: "The World", align: "Chaotic Evil", season: "Season 3", twilight: "No Twilight" },
+            { name: "Cain Moonshadow", image: "cain.png", gender: "Male", race: "Human", class: "Sorcerer", origin: "Moonshadow Estate", align: "Lawful Neutral", season: "Season 2", twilight: "Twilight of Will" },
+            { name: "Tatum Ignivar", image: "tatum.png", gender: "Male", race: "Human", class: "Warlock", origin: "Grinchis", align: "Chaotic Neutral", season: "Season 2", twilight: "No Twilight" },
+            { name: "Kroan Ignivar", image: "kroan.png", gender: "Male", race: "Human", class: "Warlock", origin: "Grinchis", align: "Lawful Neutral", season: "Season 2", twilight: "No Twilight" },
+            { name: "Saibou Shinkiyo", image: "saibou.png", gender: "Male", race: "Human", class: "Unknown Class", origin: "The World", align: "Chaotic Evil", season: "Season 3", twilight: "Unknown Twilight" },
+            { name: "Icarus", image: "icarus.png", gender: "Male", race: "Human", class: "Unknown Class", origin: "The World", align: "Lawful Good", season: "Season 3", twilight: "Unknown Twilight" },
+            { name: "Sondales", image: "sondales.png", gender: "Male", race: "Dragon", class: "Unknown Class", origin: "The World", align: "Lawful Good", season: "Season 3", twilight: "Unknown Twilight" },
+            { name: "Venn", image: "venn.png", gender: "Male", race: "Grafted Being", class: "Summoner", origin: "Malphas Empire", align: "Lawful Good", season: "Season 2", twilight: "No Twilight" },
+            { name: "Commen Noyer", image: "commen.png", gender: "Male", race: "Human", class: "Sorcerer", origin: "Sierra City", align: "Neutral Evil", season: "Season 1", twilight: "Twilight of Flesh & Mind" },
+            { name: "Hanger D. Cloth", image: "hanger.png", gender: "Male", race: "Darkner", class: "Summoner", origin: "Dark World", align: "Neutral Evil", season: "Season 3", twilight: "No Twilight" },
+            { name: "Estel Rivas", image: "estel.png", gender: "Male", race: "Human", class: "Fighter", origin: "Atlantis", align: "Lawful Good", season: "Season 3", twilight: "No Twilight" },
+            { name: "Spine", image: "spine.png", gender: "Male", race: "Human", class: "Fighter", origin: "Atlantis", align: "Lawful Good", season: "Season 3", twilight: "Twilight of Flesh" },
+            { name: "Kazoin Soorp", image: "kazoin.png", gender: "Male", race: "Fishman", class: "Fighter", origin: "Atlantis", align: "Lawful Good", season: "Season 3", twilight: "Twilight of Will" }
+        ];
+
+        let target;
+        let guessCount = 0;
+        let guessedNames = [];
+        const input = document.getElementById('guess-input');
+        const suggList = document.getElementById('suggestions');
+        const tableBody = document.getElementById('results-body');
+        const counterDisplay = document.getElementById('guess-counter');
+
+        function resetGame() {
+            target = party[Math.floor(Math.random() * party.length)];
+            guessCount = 0;
+            guessedNames = [];
+            counterDisplay.innerText = `Guesses: 0`;
+            tableBody.innerHTML = '';
+            document.getElementById('victory-container').style.display = 'none';
+            input.disabled = false;
+            input.value = '';
+        }
+
+        resetGame();
+
+        input.addEventListener('focus', () => { showSuggestions(input.value.toLowerCase().trim()); });
+        input.addEventListener('input', () => { showSuggestions(input.value.toLowerCase().trim()); });
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !suggList.contains(e.target)) { suggList.style.display = 'none'; }
+        });
+
+        function showSuggestions(val) {
+            suggList.innerHTML = '';
+            const available = party.filter(p => !guessedNames.includes(p.name));
+            const matches = val === '' ? available : available.filter(p => p.name.toLowerCase().includes(val));
+            
+            if (matches.length > 0) {
+                suggList.style.display = 'block';
+                matches.forEach(m => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<img src="${m.image}" onerror="this.src='https://via.placeholder.com/40'"> <span>${m.name}</span>`;
+                    li.onclick = () => { makeGuess(m); input.value = ''; suggList.style.display = 'none'; };
+                    suggList.appendChild(li);
+                });
+            } else { suggList.style.display = 'none'; }
+        }
+
+        function makeGuess(guess) {
+            guessedNames.push(guess.name);
+            guessCount++;
+            counterDisplay.innerText = `Guesses: ${guessCount}`;
+
+            const row = document.createElement('tr');
+            addCell(row, `<img src="${guess.image}" class="portrait-img" onerror="this.src='https://via.placeholder.com/70'">`, guess.name === target.name ? 'correct' : 'wrong');
+            addCell(row, guess.gender, getFeedback(guess.gender, target.gender));
+            addCell(row, guess.race, getFeedback(guess.race, target.race));
+            addCell(row, guess.class, getFeedback(guess.class, target.class));
+            addCell(row, guess.origin, getFeedback(guess.origin, target.origin));
+            addCell(row, guess.align, getFeedback(guess.align, target.align, true));
+            addCell(row, guess.season, getFeedback(guess.season, target.season, false, true));
+            addCell(row, guess.twilight, getFeedback(guess.twilight, target.twilight));
+            tableBody.prepend(row);
+
+            if (guess.name === target.name) {
+                document.getElementById('victory-container').style.display = 'flex';
+                input.disabled = true;
+            }
+        }
+
+        function addCell(row, content, className) {
+            const td = document.createElement('td');
+            td.innerHTML = content;
+            td.className = className;
+            row.appendChild(td);
+        }
+
+        function getFeedback(guessVal, targetVal, isAlignment = false, isSeason = false) {
+            if (guessVal === targetVal) return 'correct';
+            if (isSeason) return 'wrong';
+            
+            const g = String(guessVal).toLowerCase();
+            const t = String(targetVal).toLowerCase();
+
+            if (isAlignment) {
+                const gWords = g.split(/\s+/);
+                const tWords = t.split(/\s+/);
+                const hasMatch = gWords.some(word => tWords.includes(word));
+                return hasMatch ? 'partial' : 'wrong';
+            }
+
+            const ignoreList = ["of", "and", "the", "&", "no", "unknown", "class", "twilight", "season"];
+            const gWords = g.split(/[\s&]+/).filter(w => !ignoreList.includes(w) && w);
+            const tWords = t.split(/[\s&]+/).filter(w => !ignoreList.includes(w) && w);
+            
+            let isPartial = gWords.some(word => tWords.includes(word));
+            return isPartial ? 'partial' : 'wrong';
+        }
+    </script>
+</body>
+</html>
